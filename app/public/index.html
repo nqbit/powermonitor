@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+<script src="https://www.gstatic.com/firebasejs/3.3.2/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyDDYt9Y8tg4-o6baUkJmGP_0wk6ZI6ImxE",
+    authDomain: "reallysimplebutton.firebaseapp.com",
+    databaseURL: "https://reallysimplebutton.firebaseio.com",
+    storageBucket: "reallysimplebutton.appspot.com",
+  };
+  firebase.initializeApp(config);
+  var database = firebase.database();
+  var msgs = database.ref('device_msgs');
+  msgs.on('child_added', function(data) {
+    var val = data.val()
+    document.write("<div>" + val.published_at + " :: " + val.coreid + " :: " + val.state + "</div>");
+  });
+</script>
+  </head>
+  <body>
+  </body>
+</html>
