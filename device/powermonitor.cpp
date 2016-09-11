@@ -2,31 +2,31 @@
 #define LED_ON 0
 #define LED_OFF 1
 
-PMIC pmic;
+#define DEBUG_POWERED_ON_DELAY_MSEC 5000
+#define DEBUG_POWERED_OFF_DELAY_SEC 60
+
 bool hasCheckedIn = false;
 
 void setup() {
-    pmic.begin();
-    pinMode(LED, OUTPUT);
+  pinMode(LED, OUTPUT);
+  pinMode(WKP, INPUT);
 }
 
 void loop() {
-  uint8_t status = pmic.getSystemStatus();
-  // bool isCharging = ((status >> 4) && 0x03) == 0x00; // this may be wrong
-  bool isNotVbusPowered = ((status >> 6) && 0x03) == 0x00;
+  bool isPowered = digitalRead(WKP);
 
-  if(isNotVbusPowered) {
+  if(isPowered) {
+    if (!hasCheckedIn) {
+      Particle.publish("firebase", "on", PRIVATE);
+      digitalWrite(LED, LED_ON);
+      hasCheckedIn = true;
+    } else {
+      digitalWrite(LED, LED_OFF);
+    }
+  } else {
     // not charging
     Particle.publish("firebase", "off", PRIVATE);
-    System.sleep(SLEEP_MODE_DEEP, 60); // Should reset
-  } else {
-    if (!hasCheckedIn) {
-        Particle.publish("firebase", "on", PRIVATE);
-        digitalWrite(LED, LED_ON);
-        hasCheckedIn = true;
-    } else {
-        digitalWrite(LED, LED_OFF);
-    }
+    System.sleep(SLEEP_MODE_DEEP, DEBUG_POWERED_OFF_DELAY_SEC);
   }
-  delay(5000);
+  delay(DEBUG_POWERED_ON_DELAY_MSEC);
 }
