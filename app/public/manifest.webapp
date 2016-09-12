@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "name": "Power Monitor",
+  "launch_path": "/index.html",
+  "description": "Monitor power using Firebase 2.0",
+  "developer": {
+    "name": "Nathaniel Quillin",
+    "url": "https://github.com/nqbit"
+  },
+  "installs_allowed_from": [
+    "*"
+  ],
+  "default_locale": "en",
+  "permissions": {
+  },
+  "locales": {
+    "en": {
+      "name": "Power Monitor",
+      "description": "Monitor power using Firebase 2.0"
+    }
+  }
+}

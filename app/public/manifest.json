@@ -1,0 +1,7 @@
+{
+  "name": "Power Monitor",
+  "short_name": "Power Monitor",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "orientation": "portrait"
+}
