@@ -1,0 +1,13 @@
+{
+    "event": "sequester",
+    "url": "https://reallysimplebutton.firebaseio.com/cores/{{SPARK_CORE_ID}}.json?auth=AUTH_KEY",
+    "requestType": "POST",
+    "mydevices": true,
+    "noDefaults":true,
+    "rejectUnauthorized":true,
+    "json": {
+        "event": "{{SPARK_EVENT_NAME}}",
+        "data": "{{SPARK_EVENT_VALUE}}",
+        "published_at": "{{SPARK_PUBLISHED_AT}}"
+    }
+}
