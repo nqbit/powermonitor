@@ -83,7 +83,7 @@ PowerMonitor.prototype.toggleTimes = function(coreid) {
     var val = data.val();
     var div = document.getElementById(coreid);
     if (div) {
-      div.querySelector('.state').textContent = val.data;
+      div.querySelector('.state').textContent = "Power " + val.data;
       var timestampRef = div.querySelector('.timestamp');
       var timeElement = document.createElement('div');
       timeElement.textContent = val.data + ": " + new Date(val.published_at).toString();
@@ -109,8 +109,8 @@ PowerMonitor.prototype.displayMessage = function(coreid, state, timestamp) {
 
   var d = new Date(timestamp);
 
-  div.querySelector('.coreid').textContent = coreid;
-  div.querySelector('.state').textContent = state;
+  div.querySelector('.coreid').textContent = "id: " + coreid;
+  div.querySelector('.state').textContent = "Power " + state;
   div.querySelector('.timestamp').textContent = d.toString();
 
   // Show the card fading-in and scroll to view the new message.
