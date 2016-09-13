@@ -51,6 +51,49 @@ PowerMonitor.MESSAGE_TEMPLATE =
       '<div class="timestamp"></div>' +
     '</div>';
 
+PowerMonitor.prototype.clearTimestamp = function(coreid) {
+  var div = document.getElementById(coreid);
+  if (div) {
+    div.querySelector('.timestamp').innerText = "";
+    div.setAttribute('expanded', 'true');
+  }
+};
+
+PowerMonitor.prototype.toggleTimes = function(coreid) {
+  var div = document.getElementById(coreid);
+  if (!div) return;
+
+  this.deviceRef = this.database.ref('cores/' + coreid);
+  this.deviceRef.off();
+
+  if (div.getAttribute('expanded')) {
+    div.removeAttribute('expanded');
+    this.loadMessages();
+    return;
+  }
+
+  div.setAttribute('expanded', 'true');
+  this.messagesRef.off();
+  this.deviceRef = this.database.ref('cores/' + coreid);
+  this.deviceRef.off();
+
+  this.clearTimestamp(coreid);
+  // Loads the last update and listen for new ones.
+  var setMessage = function(data) {
+    var val = data.val();
+    var div = document.getElementById(coreid);
+    if (div) {
+      div.querySelector('.state').textContent = val.data;
+      var timestampRef = div.querySelector('.timestamp');
+      var timeElement = document.createElement('div');
+      timeElement.textContent = val.data + ": " + new Date(val.published_at).toString();
+      timestampRef.insertBefore(timeElement, timestampRef.firstChild);
+    }
+  }.bind(this);
+  this.deviceRef.limitToLast(12).on('child_added', setMessage);
+  this.deviceRef.limitToLast(12).on('child_changed', setMessage);
+};
+
 // Displays a Message in the UI.
 PowerMonitor.prototype.displayMessage = function(coreid, state, timestamp) {
   var div = document.getElementById(coreid);
@@ -60,6 +103,7 @@ PowerMonitor.prototype.displayMessage = function(coreid, state, timestamp) {
     container.innerHTML = PowerMonitor.MESSAGE_TEMPLATE;
     div = container.firstChild;
     div.setAttribute('id', coreid);
+    div.addEventListener('click', this.toggleTimes.bind(this, coreid));
     this.messageList.appendChild(div);
   }
 
