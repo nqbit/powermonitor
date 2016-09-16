@@ -1,10 +1,12 @@
 'use strict';
 
 var firebase = require('firebase');
+var twilio = require('twilio');
+var twilio_client = new twilio.RestClient(ACCOUNT_SID, AUTH_TOKEN);
 
 firebase.initializeApp({
-  databaseURL: "https://reallysimplebutton.firebaseio.com",
-  serviceAccount: "service_account.json"
+    databaseURL: "https://reallysimplebutton.firebaseio.com",
+    serviceAccount: "service_account.json"
 });
 
 var db = firebase.database();
@@ -14,7 +16,8 @@ var db = firebase.database();
 var cores_state = new Map();
 
 // A map to keep track of the users and what cores they want updates on.
-// ex. user_name => {number:"555-555-5555", cores:{nickname:"coreid1", nickname2:"coreid2"]}
+// ex. user_name =>
+//      {number:"555-555-5555", cores:{nickname:"coreid1", nickname2:"coreid2"]}
 var users_to_cores = new Map();
 
 // A value indicating whether or not updates should be sent to users.
@@ -25,11 +28,11 @@ function startCoresDatabaseListeners() {
     var coresRef = db.ref("cores");
 
     coresRef.on('child_added', function(data) {
-	registerCoreid(data.key);
+        registerCoreid(data.key);
     });
-    
+
     coresRef.on('child_removed', function(data) {
-	unregisterCoreid(data.key);
+        unregisterCoreid(data.key);
     });
 }
 
@@ -39,30 +42,31 @@ function registerCoreid(coreid) {
     deviceRef.off();
 
     deviceRef.on("child_added", function(data) {
-	var val = data.val();
-	var state = val.data;
-	var timestamp = val.published_at;
+        var val = data.val();
+        var state = val.data;
+        var timestamp = val.published_at;
 
-	if (coreid in cores_state) {
-	    var device_state = cores_state[coreid];
-	    
-	    if (device_state.state != state) {
-		device_state.notify = true;
-	    }
+        if (coreid in cores_state) {
+            var device_state = cores_state[coreid];
 
-	    device_state.state = state;
-	    device_state.timestamp = timestamp;
-	} else {
-	    cores_state[coreid] = {state:state, timestamp:timestamp, notify:false};
-	}
+            if (device_state.state != state) {
+                device_state.notify = true;
+            }
 
-	if (updates_enabled) {
-	    sendUpdatesToUsers(coreid);
-	}
+            device_state.state = state;
+            device_state.timestamp = timestamp;
+        } else {
+            cores_state[coreid] =
+                {state:state, timestamp:timestamp, notify:false};
+        }
+
+        if (updates_enabled) {
+            sendUpdatesToUsers(coreid);
+        }
     });
 
     deviceRef.once("value", function(data) {
-    	updates_enabled = true;
+        updates_enabled = true;
     });
 }
 
@@ -77,15 +81,15 @@ function startUsersDatabaseListeners() {
     var usersRef = db.ref("users");
 
     usersRef.on('child_added', function(data) {
-	updateUser(data.key, data.val());
+        updateUser(data.key, data.val());
     });
 
     usersRef.on('child_changed', function(data) {
-	updateUser(data.key, data.val());
+        updateUser(data.key, data.val());
     });
-    
+
     usersRef.on('child_removed', function(data) {
-	unregisterUser(data.key);
+        unregisterUser(data.key);
     });
 }
 
@@ -104,36 +108,55 @@ function sendUpdatesToUsers(coreid) {
     var updated_cores = new Array();
 
     for (var i = 0,length = user_keys.length; i < length; i++) {
-	var user_key = user_keys[i];
-	var user = users_to_cores[user_key];
-	
-	console.log("updating: " + user_key);
+        var user_key = user_keys[i];
+        var user = users_to_cores[user_key];
 
-	var core_keys = Object.keys(user.cores);
-	if (core_keys.indexOf(coreid) >= 0) {
-	    var core_nickname = user.cores[coreid];
+        console.log("updating: " + user_key);
 
-	    if (coreid in cores_state) {
-		if (updated_cores.indexOf(coreid) < 0) {
-		    updated_cores.push(coreid);
-		}
+        var core_keys = Object.keys(user.cores);
+        if (core_keys.indexOf(coreid) >= 0) {
+            var core_nickname = user.cores[coreid];
 
-		if (cores_state[coreid].notify) {
-		    console.log("notifying: " + user_key + " about " +
-				core_nickname + "::" + coreid + " :: " +
-				user.number);
-		}
-	    }
-	}
+            if (coreid in cores_state) {
+                if (updated_cores.indexOf(coreid) < 0) {
+                    updated_cores.push(coreid);
+                }
+
+                if (cores_state[coreid].notify) {
+                    console.log("notifying: " + user_key + " about " +
+                                core_nickname + "::" + coreid + " :: " +
+                                user.number);
+                    sendTextMessage(user_key, user.number, "power is " +
+                                    cores_state[coreid].state +
+                                    " at " + core_nickname + "(" +
+                                    coreid + ")");
+                }
+            }
+        }
     }
 
     console.log(updated_cores);
 
     for (var i = 0, length = updated_cores.length; i < length; i++) {
-	var coreid = updated_cores[i];
-	cores_state[coreid].notify = false;
+        var coreid = updated_cores[i];
+        cores_state[coreid].notify = false;
     }
 }
+
+function sendTextMessage(name, number, msg) {
+    twilio_client.sendMessage({
+        to:number,
+        from: '+16505607123',
+        body: "Hi " + name + ", " + msg
+    }, function(err, responseData) {
+        if (!err) {
+            console.log(responseData.from);
+            console.log(responseData.body);
+        } else {
+            console.log("SMS Failed");
+        }
+    });
+};
 
 // Begin listening for changes.
 startCoresDatabaseListeners();
