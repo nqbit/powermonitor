@@ -1,0 +1,9 @@
+{
+  "name": "firebase_to_twilio",
+  "version": "1.0.0",
+  "description": "A simple script to make twilio requests based on firebase db updates.",
+  "main": "firebase_to_twilio.js",
+  "dependencies": {
+    "firebase": "^3.0.0"
+  }
+}
