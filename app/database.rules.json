@@ -1,6 +1,8 @@
 {
-  "rules": {
-    ".read": "auth == null",
-    ".write": "auth != null"
-  }
+    "rules": {
+        "cores": {
+            ".read": "auth == null",
+            ".write": "auth != null"
+        }
+    }
 }
